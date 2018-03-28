@@ -64,9 +64,26 @@ Blockly.FieldDropdown = function(menuGenerator, opt_validator) {
 goog.inherits(Blockly.FieldDropdown, Blockly.Field);
 
 /**
+ * Construct a FieldDropdown from a JSON arg object.
+ * @param {!Object} options A JSON object with options (options).
+ * @returns {!Blockly.FieldDropdown} The new field instance.
+ * @package
+ * @nocollapse
+ */
+Blockly.FieldDropdown.fromJson = function(options) {
+  return new Blockly.FieldDropdown(options['options']);
+};
+
+/**
  * Horizontal distance that a checkmark overhangs the dropdown.
  */
 Blockly.FieldDropdown.CHECKMARK_OVERHANG = 25;
+
+/**
+ * Maximum height of the dropdown menu,it's also referenced in css.js as
+ * part of .blocklyDropdownMenu.
+ */
+Blockly.FieldDropdown.MAX_MENU_HEIGHT = 300;
 
 /**
  * Android can't (in 2014) display "▾", so use "▼" instead.
@@ -115,8 +132,6 @@ Blockly.FieldDropdown.prototype.init = function() {
       ' ' + Blockly.FieldDropdown.ARROW_CHAR));
 
   Blockly.FieldDropdown.superClass_.init.call(this);
-  // Make sure the arrow gets rendered.
-  this.forceRerender();
 };
 
 /**
@@ -174,8 +189,8 @@ Blockly.FieldDropdown.prototype.addTouchStartListener_ = function(menu) {
     // Highlight the menu item.
     control.handleMouseDown(e);
   }
-  menu.getHandler().listen(menu.getElement(), goog.events.EventType.TOUCHSTART,
-                           callback);
+  menu.getHandler().listen(
+      menu.getElement(), goog.events.EventType.TOUCHSTART, callback);
 };
 
 /**
@@ -190,8 +205,8 @@ Blockly.FieldDropdown.prototype.addTouchEndListener_ = function(menu) {
     // Activate the menu item.
     control.performActionInternal(e);
   }
-  menu.getHandler().listen(menu.getElement(), goog.events.EventType.TOUCHEND,
-                           callbackTouchEnd);
+  menu.getHandler().listen(
+      menu.getElement(), goog.events.EventType.TOUCHEND, callbackTouchEnd);
 };
 
 /**
@@ -238,6 +253,10 @@ Blockly.FieldDropdown.prototype.positionMenu_ = function(menu) {
 
   this.createWidget_(menu);
   var menuSize = Blockly.utils.uiMenu.getSize(menu);
+
+  if (menuSize.height > Blockly.FieldDropdown.MAX_MENU_HEIGHT) {
+    menuSize.height = Blockly.FieldDropdown.MAX_MENU_HEIGHT;
+  }
 
   if (this.sourceBlock_.RTL) {
     Blockly.utils.uiMenu.adjustBBoxesForRTL(viewportBBox, anchorBBox, menuSize);
@@ -475,11 +494,13 @@ Blockly.FieldDropdown.prototype.render_ = function() {
 Blockly.FieldDropdown.prototype.renderSelectedImage_ = function() {
   // Image option is selected.
   this.imageElement_ = Blockly.utils.createSvgElement('image',
-      {'y': 5,
-       'height': this.imageJson_.height + 'px',
-       'width': this.imageJson_.width + 'px'}, this.fieldGroup_);
-  this.imageElement_.setAttributeNS('http://www.w3.org/1999/xlink',
-                                    'xlink:href', this.imageJson_.src);
+      {
+        'y': 5,
+        'height': this.imageJson_.height + 'px',
+        'width': this.imageJson_.width + 'px'
+      }, this.fieldGroup_);
+  this.imageElement_.setAttributeNS(
+      'http://www.w3.org/1999/xlink', 'xlink:href', this.imageJson_.src);
   // Insert dropdown arrow.
   this.textElement_.appendChild(this.arrow_);
   var arrowWidth = Blockly.Field.getCachedWidth(this.arrow_);
@@ -543,3 +564,5 @@ Blockly.FieldDropdown.prototype.dispose = function() {
   Blockly.WidgetDiv.hideIfOwner(this);
   Blockly.FieldDropdown.superClass_.dispose.call(this);
 };
+
+Blockly.Field.register('field_dropdown', Blockly.FieldDropdown);

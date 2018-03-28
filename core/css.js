@@ -253,6 +253,12 @@ Blockly.Css.CONTENT = [
     'cursor: url("<<<PATH>>>/handdelete.cur"), auto;',
   '}',
 
+  '.blocklyToolboxGrab {',
+    'cursor: url("<<<PATH>>>/handclosed.cur"), auto;',
+    'cursor: grabbing;',
+    'cursor: -webkit-grabbing;',
+  '}',
+
   '.blocklyDragging>.blocklyPath,',
   '.blocklyDragging>.blocklyPathLight {',
     'fill-opacity: .8;',
@@ -380,9 +386,12 @@ Blockly.Css.CONTENT = [
   '.blocklyCommentTextarea {',
     'background-color: #ffc;',
     'border: 0;',
+    'outline: 0;',
     'margin: 0;',
     'padding: 2px;',
     'resize: none;',
+    'display: block;',
+    'overflow: hidden;',
   '}',
 
   '.blocklyHtmlInput {',
@@ -499,6 +508,9 @@ Blockly.Css.CONTENT = [
 
   '.blocklyDropdownMenu {',
     'padding: 0 !important;',
+    /* max-height value is same as the constant
+     * Blockly.FieldDropdown.MAX_MENU_HEIGHT defined in field_dropdown.js. */
+    'max-height: 300px !important;',
   '}',
 
   /* Override the default Closure URL. */

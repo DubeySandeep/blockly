@@ -28,6 +28,7 @@
 
 goog.provide('Blockly.Field');
 
+goog.require('Blockly.Events.BlockChange');
 goog.require('Blockly.Gesture');
 
 goog.require('goog.asserts');
@@ -50,6 +51,52 @@ Blockly.Field = function(text, opt_validator) {
   this.size_ = new goog.math.Size(0, Blockly.BlockSvg.MIN_BLOCK_Y);
   this.setValue(text);
   this.setValidator(opt_validator);
+};
+
+/**
+ * The set of all registered fields, keyed by field type as used in the JSON
+ * definition of a block.
+ * @type {!Object<string, !{fromJson: Function}>}
+ * @private
+ */
+Blockly.Field.TYPE_MAP_ = {};
+
+/**
+ * Registers a field type. May also override an existing field type.
+ * Blockly.Field.fromJson uses this registry to find the appropriate field.
+ * @param {!string} type The field type name as used in the JSON definition.
+ * @param {!{fromJson: Function}} fieldClass The field class containing a
+ *     fromJson function that can construct an instance of the field.
+ * @throws {Error} if the type name is empty, or the fieldClass is not an
+ *     object containing a fromJson function.
+ */
+Blockly.Field.register = function(type, fieldClass) {
+  if (!goog.isString(type) || goog.string.isEmptyOrWhitespace(type)) {
+    throw new Error('Invalid field type "' + type + '"');
+  }
+  if (!goog.isObject(fieldClass) || !goog.isFunction(fieldClass.fromJson)) {
+    throw new Error('Field "' + fieldClass +
+        '" must have a fromJson function');
+  }
+  Blockly.Field.TYPE_MAP_[type] = fieldClass;
+};
+
+/**
+ * Construct a Field from a JSON arg object.
+ * Finds the appropriate registered field by the type name as registered using
+ * Blockly.Field.register.
+ * @param {!Object} options A JSON object with a type and options specific
+ *     to the field type.
+ * @returns {?Blockly.Field} The new field instance or null if a field wasn't
+ *     found with the given type name
+ * @package
+ */
+Blockly.Field.fromJson = function(options) {
+  var fieldClass = Blockly.Field.TYPE_MAP_[options['type']];
+  if (fieldClass) {
+    return fieldClass.fromJson(options);
+  }
+  return null;
 };
 
 /**
@@ -142,11 +189,13 @@ Blockly.Field.prototype.init = function() {
     this.fieldGroup_.style.display = 'none';
   }
   this.borderRect_ = Blockly.utils.createSvgElement('rect',
-      {'rx': 4,
-       'ry': 4,
-       'x': -Blockly.BlockSvg.SEP_SPACE_X / 2,
-       'y': 0,
-       'height': 16}, this.fieldGroup_);
+      {
+        'rx': 4,
+        'ry': 4,
+        'x': -Blockly.BlockSvg.SEP_SPACE_X / 2,
+        'y': 0,
+        'height': 16
+      }, this.fieldGroup_);
   /** @type {!Element} */
   this.textElement_ = Blockly.utils.createSvgElement('text',
       {'class': 'blocklyText', 'y': this.size_.height - 12.5},
@@ -155,8 +204,8 @@ Blockly.Field.prototype.init = function() {
   this.updateEditable();
   this.sourceBlock_.getSvgRoot().appendChild(this.fieldGroup_);
   this.mouseDownWrapper_ =
-      Blockly.bindEventWithChecks_(this.fieldGroup_, 'mousedown', this,
-      this.onMouseDown_);
+      Blockly.bindEventWithChecks_(
+          this.fieldGroup_, 'mousedown', this, this.onMouseDown_);
   // Force a render.
   this.render_();
 };

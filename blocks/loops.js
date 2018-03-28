@@ -228,7 +228,7 @@ Blockly.Constants.Loops.WHILE_UNTIL_TOOLTIPS = {
 
 Blockly.Extensions.register('controls_whileUntil_tooltip',
     Blockly.Extensions.buildTooltipForDropdown(
-      'MODE', Blockly.Constants.Loops.WHILE_UNTIL_TOOLTIPS));
+        'MODE', Blockly.Constants.Loops.WHILE_UNTIL_TOOLTIPS));
 
 /**
  * Tooltips for the 'controls_flow_statements' block, keyed by FLOW value.
@@ -243,7 +243,7 @@ Blockly.Constants.Loops.BREAK_CONTINUE_TOOLTIPS = {
 
 Blockly.Extensions.register('controls_flow_tooltip',
     Blockly.Extensions.buildTooltipForDropdown(
-      'FLOW', Blockly.Constants.Loops.BREAK_CONTINUE_TOOLTIPS));
+        'FLOW', Blockly.Constants.Loops.BREAK_CONTINUE_TOOLTIPS));
 
 /**
  * Mixin to add a context menu item to create a 'variables_get' block.
@@ -261,6 +261,9 @@ Blockly.Constants.Loops.CUSTOM_CONTEXT_MENU_CREATE_VARIABLES_GET_MIXIN = {
    * @this Blockly.Block
    */
   customContextMenu: function(options) {
+    if (this.isInFlyout){
+      return;
+    }
     var varName = this.getFieldValue('VAR');
     if (!this.isCollapsed() && varName != null) {
       var option = {enabled: true};
@@ -280,11 +283,11 @@ Blockly.Extensions.registerMixin('contextMenu_newGetVariableBlock',
     Blockly.Constants.Loops.CUSTOM_CONTEXT_MENU_CREATE_VARIABLES_GET_MIXIN);
 
 Blockly.Extensions.register('controls_for_tooltip',
-    Blockly.Extensions.buildTooltipWithFieldValue(
+    Blockly.Extensions.buildTooltipWithFieldText(
         '%{BKY_CONTROLS_FOR_TOOLTIP}', 'VAR'));
 
 Blockly.Extensions.register('controls_forEach_tooltip',
-    Blockly.Extensions.buildTooltipWithFieldValue(
+    Blockly.Extensions.buildTooltipWithFieldText(
         '%{BKY_CONTROLS_FOREACH_TOOLTIP}', 'VAR'));
 
 /**
@@ -299,7 +302,7 @@ Blockly.Constants.Loops.CONTROL_FLOW_IN_LOOP_CHECK_MIXIN = {
   /**
    * List of block types that are loops and thus do not need warnings.
    * To add a new loop type add this to your code:
-   * Blockly.Blocks['controls_flow_statements'].LOOP_TYPES.push('custom_loop');
+   * Blockly.Constants.Loops.CONTROL_FLOW_IN_LOOP_CHECK_MIXIN.LOOP_TYPES.push('custom_loop');
    */
   LOOP_TYPES: ['controls_repeat', 'controls_repeat_ext', 'controls_forEach',
     'controls_for', 'controls_whileUntil'],
