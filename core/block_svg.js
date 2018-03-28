@@ -27,6 +27,7 @@
 goog.provide('Blockly.BlockSvg');
 
 goog.require('Blockly.Block');
+goog.require('Blockly.BlockAnimations');
 goog.require('Blockly.ContextMenu');
 goog.require('Blockly.Events.Ui');
 goog.require('Blockly.Events.BlockMove');
@@ -858,35 +859,8 @@ Blockly.BlockSvg.prototype.disposeUiEffect = function() {
   this.workspace.getParentSvg().appendChild(clone);
   clone.bBox_ = clone.getBBox();
   // Start the animation.
-  Blockly.BlockSvg.disposeUiStep_(clone, this.RTL, new Date,
+  Blockly.BlockAnimations.disposeUiStep_(clone, this.RTL, new Date,
       this.workspace.scale);
-};
-
-/**
- * Animate a cloned block and eventually dispose of it.
- * This is a class method, not an instance method since the original block has
- * been destroyed and is no longer accessible.
- * @param {!Element} clone SVG element to animate and dispose of.
- * @param {boolean} rtl True if RTL, false if LTR.
- * @param {!Date} start Date of animation's start.
- * @param {number} workspaceScale Scale of workspace.
- * @private
- */
-Blockly.BlockSvg.disposeUiStep_ = function(clone, rtl, start, workspaceScale) {
-  var ms = new Date - start;
-  var percent = ms / 150;
-  if (percent > 1) {
-    goog.dom.removeNode(clone);
-  } else {
-    var x = clone.translateX_ +
-        (rtl ? -1 : 1) * clone.bBox_.width * workspaceScale / 2 * percent;
-    var y = clone.translateY_ + clone.bBox_.height * workspaceScale * percent;
-    var scale = (1 - percent) * workspaceScale;
-    clone.setAttribute('transform', 'translate(' + x + ',' + y + ')' +
-        ' scale(' + scale + ')');
-    setTimeout(
-        Blockly.BlockSvg.disposeUiStep_, 10, clone, rtl, start, workspaceScale);
-  }
 };
 
 /**
@@ -918,27 +892,7 @@ Blockly.BlockSvg.prototype.connectionUiEffect = function() {
       },
       this.workspace.getParentSvg());
   // Start the animation.
-  Blockly.BlockSvg.connectionUiStep_(ripple, new Date, this.workspace.scale);
-};
-
-/**
- * Expand a ripple around a connection.
- * @param {!Element} ripple Element to animate.
- * @param {!Date} start Date of animation's start.
- * @param {number} workspaceScale Scale of workspace.
- * @private
- */
-Blockly.BlockSvg.connectionUiStep_ = function(ripple, start, workspaceScale) {
-  var ms = new Date - start;
-  var percent = ms / 150;
-  if (percent > 1) {
-    goog.dom.removeNode(ripple);
-  } else {
-    ripple.setAttribute('r', percent * 25 * workspaceScale);
-    ripple.style.opacity = 1 - percent;
-    Blockly.BlockSvg.disconnectUiStop_.pid_ = setTimeout(
-        Blockly.BlockSvg.connectionUiStep_, 10, ripple, start, workspaceScale);
-  }
+  Blockly.BlockAnimations.connectionUiStep_(ripple, new Date, this.workspace.scale);
 };
 
 /**
@@ -958,35 +912,7 @@ Blockly.BlockSvg.prototype.disconnectUiEffect = function() {
     magnitude *= -1;
   }
   // Start the animation.
-  Blockly.BlockSvg.disconnectUiStep_(this.svgGroup_, magnitude, new Date);
-};
-
-/**
- * Animate a brief wiggle of a disconnected block.
- * @param {!Element} group SVG element to animate.
- * @param {number} magnitude Maximum degrees skew (reversed for RTL).
- * @param {!Date} start Date of animation's start.
- * @private
- */
-Blockly.BlockSvg.disconnectUiStep_ = function(group, magnitude, start) {
-  var DURATION = 200;  // Milliseconds.
-  var WIGGLES = 3;  // Half oscillations.
-
-  var ms = new Date - start;
-  var percent = ms / DURATION;
-
-  if (percent > 1) {
-    group.skew_ = '';
-  } else {
-    var skew = Math.round(
-        Math.sin(percent * Math.PI * WIGGLES) * (1 - percent) * magnitude);
-    group.skew_ = 'skewX(' + skew + ')';
-    Blockly.BlockSvg.disconnectUiStop_.group = group;
-    Blockly.BlockSvg.disconnectUiStop_.pid =
-        setTimeout(
-            Blockly.BlockSvg.disconnectUiStep_, 10, group, magnitude, start);
-  }
-  group.setAttribute('transform', group.translate_ + group.skew_);
+  Blockly.BlockAnimations.disconnectUiStep_(this.svgGroup_, magnitude, new Date);
 };
 
 /**
@@ -1002,18 +928,6 @@ Blockly.BlockSvg.disconnectUiStop_ = function() {
     Blockly.BlockSvg.disconnectUiStop_.group = null;
   }
 };
-
-/**
- * PID of disconnect UI animation.  There can only be one at a time.
- * @type {number}
- */
-Blockly.BlockSvg.disconnectUiStop_.pid = 0;
-
-/**
- * SVG group of wobbling block.  There can only be one at a time.
- * @type {Element}
- */
-Blockly.BlockSvg.disconnectUiStop_.group = null;
 
 /**
  * Change the colour of a block.
